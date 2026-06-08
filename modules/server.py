@@ -7,39 +7,23 @@ import threading
 import paramiko
 import time
 import os
-import geoip2.database
-from config import HOST, PORT, SERVER_KEY_FILE, GEOIP_DB
+from config import HOST, PORT, SERVER_KEY_FILE
 from modules.logger import OsamaLogger
 
 class OsamaSSHServer(paramiko.ServerInterface):
     
-    def __init__(self, logger, geo_reader):
+    def __init__(self, logger):
         self.logger = logger
-        self.geo_reader = geo_reader
         self.transport = None
-    
-    def get_location(self, ip):
-        if not self.geo_reader or ip.startswith(('127.', '192.168.', '10.', '172.')):
-            return "Local", "Local"
-        
-        try:
-            response = self.geo_reader.city(ip)
-            country = response.country.name if response.country.name else "Unknown"
-            city = response.city.name if response.city.name else "Unknown"
-            return country, city
-        except:
-            return "Unknown", "Unknown"
     
     def check_auth_password(self, username, password):
         client_ip = self.transport.getpeername()[0]
-        country, city = self.get_location(client_ip)
-        self.logger.log_attack(client_ip, username, password, country, city)
+        self.logger.log_attack(client_ip, username, password)
         return paramiko.AUTH_FAILED
     
     def check_auth_publickey(self, username, key):
         client_ip = self.transport.getpeername()[0]
-        country, city = self.get_location(client_ip)
-        self.logger.log_attack(client_ip, username, "[PUBLIC_KEY]", country, city)
+        self.logger.log_attack(client_ip, username, "[PUBLIC_KEY]")
         return paramiko.AUTH_FAILED
     
     def get_allowed_auths(self, username):
@@ -50,16 +34,6 @@ class OsamaHoneypotServer:
     def __init__(self):
         self.logger = OsamaLogger()
         self.host_key = self.load_or_create_key()
-        self.geo_reader = self.load_geoip()
-        
-    def load_geoip(self):
-        try:
-            if os.path.exists(GEOIP_DB) and os.path.getsize(GEOIP_DB) > 1000:
-                return geoip2.database.Reader(GEOIP_DB)
-            else:
-                return None
-        except Exception as e:
-            return None
         
     def load_or_create_key(self):
         if os.path.exists(SERVER_KEY_FILE):
@@ -83,7 +57,7 @@ class OsamaHoneypotServer:
             transport.add_server_key(self.host_key)
             transport.local_version = "SSH-2.0-OpenSSH_8.9p1 Ubuntu"
             
-            server = OsamaSSHServer(self.logger, self.geo_reader)
+            server = OsamaSSHServer(self.logger)
             server.transport = transport
             
             try:
@@ -114,8 +88,6 @@ class OsamaHoneypotServer:
         
         server_socket.listen(100)
         
-        geo_status = "مفعل" if self.geo_reader else "معطل"
-        
         try:
             from config import TELEGRAM_ENABLED
             tele_status = "مفعل" if TELEGRAM_ENABLED else "معطل"
@@ -128,7 +100,7 @@ class OsamaHoneypotServer:
 ║   ✅ السيرفر شغال بنجاح!                                             ║
 ║   🌐 المستمع: {HOST}:{PORT}                                           ║
 ║   📁 مجلد اللوجات: logs/                                             ║
-║   🌍 التحليل الجغرافي: {geo_status}                                    ║
+║   🗺️ رابط خريطة Google Maps: مفعل                                   ║
 ║   🤖 إشعارات تلجرام: {tele_status}                                    ║
 ║   🎯 مستني الهجمات...                                                ║
 ║                                                                      ║
@@ -167,6 +139,3 @@ class OsamaHoneypotServer:
    📊 ملف CSV           : {stats['csv_file']}
         """)
         print(f"\n[+] شكراً لاستخدام Osama Honeypot\033[0m")
-        
-        if self.geo_reader:
-            self.geo_reader.close()
