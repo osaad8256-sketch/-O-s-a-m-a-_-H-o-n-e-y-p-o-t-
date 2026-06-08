@@ -61,11 +61,11 @@ progress_bar()
 
 def check_requirements():
     try:
-        import paramiko, geoip2, requests
+        import paramiko, requests
         print(f"{WHITE}[{GREEN}✓{WHITE}] جميع المكتبات موجودة{RESET}")
     except ImportError:
         print(f"{WHITE}[{RED}✗{WHITE}] جاري تثبيت المكتبات...{RESET}")
-        subprocess.run(['pip3', 'install', 'paramiko', 'geoip2', 'requests', '--break-system-packages'])
+        subprocess.run(['pip3', 'install', 'paramiko', 'requests', '--break-system-packages'])
 
 def check_root():
     if os.geteuid() != 0:
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     
     print(f"{WHITE}[{GREEN}⚡{WHITE}] تشغيل الخادم...{RESET}")
     print(f"{WHITE}[{BLUE}🌐{WHITE}] المستمع: 0.0.0.0:2222{RESET}")
-    print(f"{WHITE}[{MAGENTA}🤖{WHITE}] التحليل الجغرافي: {'مفعل' if os.path.exists('data/GeoLite2-City.mmdb') else 'معطل'}{RESET}")
+    print(f"{WHITE}[{MAGENTA}🗺️{WHITE}] رابط خريطة Google Maps: مفعل{RESET}")
     print(f"{WHITE}[{YELLOW}📱{WHITE}] إشعارات تلجرام: {'مفعل' if TELEGRAM_ENABLED else 'معطل'}{RESET}\n")
     
     server = OsamaHoneypotServer()
