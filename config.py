@@ -2,7 +2,7 @@
 # إعدادات أداة Osama Honeypot
 
 HOST = '0.0.0.0'
-PORT = 2222
+PORT = 22
 
 LOG_DIR = "logs"
 DATA_DIR = "data"
