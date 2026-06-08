@@ -8,7 +8,6 @@ LOG_DIR = "logs"
 DATA_DIR = "data"
 
 SERVER_KEY_FILE = "osama_honeypot_key"
-GEOIP_DB = "data/GeoLite2-City.mmdb"
 
 # إعدادات التلجرام (خليها False دلوقتي)
 TELEGRAM_ENABLED = False
